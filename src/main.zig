@@ -1,12 +1,6 @@
-const std = @import("std");
-
-fn add2(x: *u32) void {
-    const d: u32 = 2;
-    x.* = x.* + d;
-}
+const user = @import("user.zig");
 
 pub fn main() !void {
-    var x: u32 = 4;
-    add2(&x);
-    std.debug.print("Result: {d}\n", .{x});
+    const u = user.User.init(1, "pedro", "emai@gmail.com");
+    u.print_name();
 }
