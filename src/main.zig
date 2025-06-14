@@ -1,7 +1,13 @@
 const std = @import("std");
 
-pub fn main() !void {
-    const ns = [4]u8{48, 24, 12, 6};
-    const stdout = std.io.getStdOut().writer();
-    try stdout.print("{d}\n", .{ ns[2] });
+pub fn main() void {
+    const level: u8 = 2;
+    const category = switch (level) {
+        1, 2 => "beginner",
+        3 => "professional",
+        else => {
+            @panic("Not supported");
+        },
+    };
+    std.debug.print("{s}\n", .{category});
 }
