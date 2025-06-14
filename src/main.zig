@@ -1,13 +1,12 @@
 const std = @import("std");
 
-pub fn main() void {
-    const level: u8 = 2;
-    const category = switch (level) {
-        1, 2 => "beginner",
-        3 => "professional",
-        else => {
-            @panic("Not supported");
-        },
-    };
-    std.debug.print("{s}\n", .{category});
+fn add2(x: *u32) void {
+    const d: u32 = 2;
+    x.* = x.* + d;
+}
+
+pub fn main() !void {
+    var x: u32 = 4;
+    add2(&x);
+    std.debug.print("Result: {d}\n", .{x});
 }
