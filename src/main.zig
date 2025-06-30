@@ -1,12 +1,9 @@
 const std = @import("std");
 
-fn add(x: u8, y: u8) *const u8 {
-    const result = x + y;
-    return &result;
-}
-
 pub fn main() !void {
-    const r = add(5, 27);
-    std.debug.print("memory address: {}\n", .{r});
-    std.debug.print("value: {d}\n", .{r.*});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    const name = "Pedro";
+    const output = try std.fmt.allocPrint(allocator, "Hello {s}!!!", .{name});
+    std.debug.print("{s}\n", .{output});
 }
