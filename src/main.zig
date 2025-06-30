@@ -1,6 +1,12 @@
-const user = @import("user.zig");
+const std = @import("std");
+
+fn add(x: u8, y: u8) *const u8 {
+    const result = x + y;
+    return &result;
+}
 
 pub fn main() !void {
-    const u = user.User.init(1, "pedro", "emai@gmail.com");
-    u.print_name();
+    const r = add(5, 27);
+    std.debug.print("memory address: {}\n", .{r});
+    std.debug.print("value: {d}\n", .{r.*});
 }
