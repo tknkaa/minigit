@@ -1,9 +1,9 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    const name = "Pedro";
-    const output = try std.fmt.allocPrint(allocator, "Hello {s}!!!", .{name});
-    std.debug.print("{s}\n", .{output});
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
+    const stdout = &stdout_writer.interface;
+    try stdout.print("Hello, {s}!\n", .{"world"});
+    try stdout.flush();
 }
