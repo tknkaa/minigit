@@ -8,4 +8,3 @@ pub fn main() void {
     const length = b.len;
     std.debug.print("{}", .{length});
 }
-
