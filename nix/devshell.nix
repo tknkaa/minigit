@@ -2,7 +2,7 @@
 pkgs.mkShell {
   # Add build dependencies
   packages = with pkgs; [
-    cowsay
+    zig
   ];
 
   # Add environment variables
@@ -10,6 +10,6 @@ pkgs.mkShell {
 
   # Load custom bash code
   shellHook = ''
-
+    export ZIG_GLOBAL_CACHE_DIR=$HOME/.cache/zig
   '';
 }
