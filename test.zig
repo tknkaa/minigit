@@ -83,3 +83,93 @@ test "function recursion" {
     try expect(x == 55);
 }
 
+test "defer" {
+    var x: i16 = 5;
+    {
+        defer x += 2;
+        try expect(x == 5);
+    }
+    try expect(x == 7);
+}
+
+test "multi defer" {
+    var x: f32 = 5;
+    {
+        // executed in reverse order
+        defer x += 2;
+        defer x /= 2;
+    }
+    try expect(x == 4.5);
+}
+
+const FileOpenError = error{
+    AccessDenied,
+    OutOfMemory,
+};
+
+const AllocationError = error{OutOfMemory};
+
+test "coerce error from a subset to a superset" {
+    const err: FileOpenError = AllocationError.OutOfMemory;
+    try expect(err == FileOpenError.OutOfMemory);
+}
+
+test "error union" {
+    const maybe_error: AllocationError!u16 = 10;
+    const no_error = maybe_error catch 0;
+    try expect(@TypeOf(no_error) == u16);
+    try expect(no_error == 10);
+}
+
+fn failingFunction() error{Oops}!void {
+    return error.Oops;
+}
+
+test "returning an error" {
+    failingFunction() catch |err| {
+        try expect(err == error.Oops);
+        return;
+    };
+}
+
+fn failFn() error{Oops}!i32 {
+    try failingFunction();
+    return 12;
+}
+
+test "try" {
+    const v = failFn() catch |err| {
+        try expect(err == error.Oops);
+        return;
+    };
+    // never reached
+    try expect(v == 12);
+}
+
+var problems: u32 = 98;
+fn failFnCounter() error{Oops}!void {
+    errdefer problems += 1;
+    try failingFunction();
+}
+
+test "errdefer" {
+    failFnCounter() catch |err| {
+        try expect(err == error.Oops);
+        try expect(problems == 99);
+        return;
+    };
+}
+
+fn createFile() !void {
+    return error.AccessDenied;
+}
+
+test "inferred error set" {
+    const x: error{AccessDenied}!void = createFile();
+    _ = x catch {};
+}
+
+
+
+
+
