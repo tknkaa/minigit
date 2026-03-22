@@ -6,8 +6,10 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -84,6 +86,39 @@ func gitCommit(message string) {
 	os.WriteFile(".minigit/refs/heads/main", []byte(commitHash+"\n"), 0644)
 }
 
+func gitCatFile(hash string) {
+	path := ".minigit/objects/" + hash[:2] + "/" + hash[2:]
+	data, _ := os.ReadFile(path)
+
+	r, _ := zlib.NewReader(bytes.NewReader(data))
+	decoded, _ := io.ReadAll(r)
+	r.Close()
+
+	null := bytes.IndexByte(decoded, 0)
+	header := string(decoded[:null])
+	content := decoded[null+1:]
+	if strings.HasPrefix(header, "tree") {
+		printTree(content)
+	} else {
+		fmt.Println(header)
+		fmt.Println(string(content))
+	}
+}
+
+func printTree(content []byte) {
+	for len(content) > 0 {
+		null := bytes.IndexByte(content, 0)
+		header := string(content[:null])
+		hash := hex.EncodeToString(content[null+1 : null+21])
+		parts := strings.SplitN(header, " ", 2)
+		mode := parts[0]
+		filename := parts[1]
+		objType := "blob"
+		fmt.Printf("%s %s %s\t%s\n", mode, objType, hash, filename)
+		content = content[null+21:]
+	}
+}
+
 func main() {
 	command := os.Args[1]
 	switch command {
@@ -94,6 +129,11 @@ func main() {
 			message := os.Args[3]
 			// git add -A && git commit -m <message>
 			gitCommit(message)
+		}
+	case "cat-file":
+		if os.Args[2] == "-p" {
+			hash := os.Args[3]
+			gitCatFile(hash)
 		}
 	default:
 		panic("no command")
