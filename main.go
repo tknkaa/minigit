@@ -41,8 +41,8 @@ func gitCommit(message string) {
 			w := zlib.NewWriter(&b)
 			w.Write(append([]byte("blob"+" "+strconv.Itoa(len(content))+"\x00"), content...))
 			w.Close()
-			blobContent := b.String()
-			os.WriteFile(".minigit/objects/"+blobHash, []byte(blobContent), 0644)
+			os.Mkdir(".minigit/objects/"+blobHash[:2], 0755)
+			os.WriteFile(".minigit/objects/"+blobHash[:2]+"/"+blobHash[2:], b.Bytes(), 0644)
 
 			mode := "100644"
 			entries = append(entries, append([]byte(mode+" "+filename+"\x00"), checksum[:]...))
@@ -54,16 +54,34 @@ func gitCommit(message string) {
 	for _, entry := range entries {
 		combined = append(combined, entry...)
 	}
-	checksum := sha1.Sum(append([]byte("tree"+" "+strconv.Itoa(len(entries))+"\x00"), combined...))
+	checksum := sha1.Sum(append([]byte("tree"+" "+strconv.Itoa(len(combined))+"\x00"), combined...))
 	treeHash := hex.EncodeToString(checksum[:])
 
 	// calculate the content of tree object
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(append([]byte("tree"+" "+strconv.Itoa(len(entries))+"\x00"), combined...))
+	w.Write(append([]byte("tree"+" "+strconv.Itoa(len(combined))+"\x00"), combined...))
 	w.Close()
-	treeContent := b.String()
-	os.WriteFile(".minigit/objects/"+treeHash, []byte(treeContent), 0644)
+
+	os.Mkdir(".minigit/objects/"+treeHash[:2], 0755)
+	os.WriteFile(".minigit/objects/"+treeHash[:2]+"/"+treeHash[2:], b.Bytes(), 0644)
+
+	// calculate the filename of commit object
+	// simplifies format
+	commitData := []byte("tree" + " " + treeHash + "\n" + "author" + " " + author + " " + date + "\n" + message)
+	checksum = sha1.Sum(append([]byte("commit"+" "+strconv.Itoa(len(commitData))+"\x00"), commitData...))
+	commitHash := hex.EncodeToString(checksum[:])
+
+	// calculate the content of commit object
+	var cb bytes.Buffer
+	cw := zlib.NewWriter(&cb)
+	cw.Write(append([]byte("commit"+" "+strconv.Itoa(len(commitData))+"\x00"), []byte(commitData)...))
+	cw.Close()
+
+	os.Mkdir(".minigit/objects/"+commitHash[:2], 0755)
+	os.WriteFile(".minigit/objects/"+commitHash[:2]+"/"+commitHash[2:], cb.Bytes(), 0644)
+
+	os.WriteFile(".minigit/refs/heads/main", []byte(commitHash+"\n"), 0644)
 }
 
 func main() {
